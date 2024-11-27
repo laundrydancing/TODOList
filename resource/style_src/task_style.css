@@ -1,0 +1,34 @@
+QWidget:hover{
+    background-color:#f5f5f5;
+}
+
+QCheckBox {
+    font-size:16px;
+    font-weight:bold;
+    color:#000000;;
+    padding-left: 5px;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+}
+
+QCheckBox:checked{
+    color:gray;
+}
+
+QCheckBox::indicator{
+    image:url(:/img/Check_white.svg);
+    width:12px;
+    height:12px;
+    border:none;
+    background-color:#e2e2e2;
+}
+
+QCheckBox::indicator:checked {
+    border:none;
+    background-color: #1d1d1d;
+}
+
+QLabel {
+    font-size: 12px;
+    color: gray;
+}

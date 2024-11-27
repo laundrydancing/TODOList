@@ -1,0 +1,131 @@
+/*窗口样式*/
+QWidget{
+    background-color:#ffffff;
+    border: 1px solid #a1a1a1;
+    border-radius: 5px;
+}
+
+/*日历样式*/
+QCalendarWidget{
+    border:none;
+}
+
+QCalendarWidget QAbstractItemView {
+    border: none;
+    outline: none;
+}
+
+QCalendarWidget QAbstractItemView::item:selected {
+    outline: none;
+    border: none;
+    background-color: black;
+    color: white;
+}
+
+/*导航条*/
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    border: none;
+}
+
+QCalendarWidget QToolButton::menu-indicator {
+    image: none;
+}
+
+QToolButton{
+    font-size:16px;
+    color: black;
+    border:none;
+    height:30px;
+    width:80px;
+}
+
+QToolButton:hover {
+    color: black;
+    background-color:#f5f5f5;
+}
+
+QToolButton:pressed {
+    color: black;
+    background-color:#f5f5f5;
+}
+
+/*月选择器*/
+QCalendarWidget QMenu{
+    background-color:#ffffff;
+}
+
+QCalendarWidget QMenu::item{
+    color:black;
+}
+
+QCalendarWidget QMenu::item:selected {
+    color:white;
+    background-color:black;
+}
+
+/*年选择器*/
+QCalendarWidget QSpinBox{
+    border: none;
+    width:80px;
+    background-color:#f5f5f5;
+}
+
+QCalendarWidget QSpinBox::up-button{
+    width:16px;
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    border:none;
+    color:black;
+}
+
+QCalendarWidget QSpinBox::down-button{
+    width:16px;
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    border:none;
+    color:black;
+}
+
+QCalendarWidget QSpinBox::up-button:hover{
+    background-color:#a1a1a1;
+}
+
+QCalendarWidget QSpinBox::down-button:hover{
+    background-color:#a1a1a1;
+}
+
+QSpinBox::up-arrow {
+    width: 7px;
+    height: 7px;
+    image: url(:/img/Chevron-up.svg);
+    color: #000000;
+}
+
+QSpinBox::down-arrow {
+    width: 7px;
+    height: 7px;
+    image: url(:/img/Chevron-down.svg);
+    color: #000000;
+}
+
+/*下方按钮*/
+QPushButton{
+    height:20px;
+    border:none;
+}
+
+QPushButton#okButton{
+    color:#ffffff;
+    background-color:#000000;
+}
+
+QPushButton#calendarCancelButton{
+    color:#000000;
+    background-color:#ffffff;
+}
+
+QPushButton#calendarCancelButton:hover {
+    color:#000000;
+    background-color:#f5f5f5;
+}
+

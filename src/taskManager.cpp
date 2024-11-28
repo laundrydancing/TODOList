@@ -3,8 +3,7 @@
 
 #include "dataconnect.h"
 #include "edittask.h"
-
-#include <QFile>
+#include "taskitem.h"
 
 taskManager::taskManager(QWidget* parent,Ui::MainWindow* parentUI):QWidget(parent),parentUi(parentUI) {
     //连接数据库
@@ -30,40 +29,10 @@ taskManager::taskManager(QWidget* parent,Ui::MainWindow* parentUI):QWidget(paren
 
 #define taskItemWidth 310
 void taskManager::addTaskItem(int taskId,int category,QString taskName,int isCompleted,QString taskDescription){
-    QWidget* newTaskItem=new QWidget(categoryWidgets[category]);
-    newTaskItem->setFixedSize(taskItemWidth,50);
-    QString taskItemName=QString::number(taskId);
-    newTaskItem->setObjectName(taskItemName);
-    QFile widgetsStyle(":/style_src/task_style.css");
-    if(widgetsStyle.open(QFile::ReadOnly)){
-        QString widgetsStyleString=widgetsStyle.readAll();
-        newTaskItem->setStyleSheet(widgetsStyleString);
-    }
-
-    QVBoxLayout* taskItemLayout=new QVBoxLayout(newTaskItem);
-    taskItemLayout->setContentsMargins(5, 5, 5, 5);
-    taskItemLayout->setSpacing(2);
-    taskItemLayout->setAlignment(Qt::AlignLeft);
-
-    //任务名
-    QCheckBox* taskButton=new QCheckBox(newTaskItem);
-    taskButton->setText(taskName);
-    taskButton->setFixedSize(taskItemWidth,30);
-    taskItemLayout->addWidget(taskButton);
-    if(isCompleted==1)
-    taskButton->setCheckState(Qt::Checked);
-
-    //任务描述
-    QLabel* descriptionLabel=nullptr;
-    if(!taskDescription.isEmpty()){
-        descriptionLabel=new QLabel(taskDescription,newTaskItem);
-        descriptionLabel->resize(taskItemWidth,20);
-        descriptionLabel->setWordWrap(true);
-        taskItemLayout->addWidget(descriptionLabel);
-    }
+    TaskItem* newTaskItem=new TaskItem(taskId,taskName,isCompleted,taskDescription,categoryWidgets[category]);
 
     //更新任务完成状态
-    connect(taskButton,&QCheckBox::checkStateChanged,this,[=](Qt::CheckState state){
+    connect(newTaskItem,&TaskItem::taskStateChange,this,[=](Qt::CheckState state){
         if(state==Qt::Checked){
             int Completed=1;
             updateTask(taskId,QString(),QString(),QDateTime(),QDate(),nullptr,nullptr, &Completed);
@@ -76,6 +45,9 @@ void taskManager::addTaskItem(int taskId,int category,QString taskName,int isCom
         }
     });
 
+    connect(newTaskItem,&TaskItem::editButtonClicked,this,[=]{
+        updateTaskItem(taskId);
+    });
 
     layout[category]->insertWidget(0,newTaskItem);
 }
@@ -113,7 +85,7 @@ void taskManager::refreshTask(QDate selectedDate){
 
 void taskManager::newEditTask(QDate newEditDate){
     if(taskWidgetNum==0){
-        editTask* taskWidget=new editTask();
+        editTask* taskWidget=new editTask(0);
 
         connect(taskWidget,&editTask::taskConfirmed,this,[=](QVariantList taskContent){
             taskWidgetNum--;
@@ -146,12 +118,28 @@ void taskManager::newEditTask(QDate newEditDate){
     }
 }
 
-void taskManager::updateTaskItem(int taskID,QCheckBox* nameBox,QLabel* descriptionLabel){
-    if(descriptionLabel==nullptr){
-        //TODO:没想好
-    }
-    editTask* taskWidget=new editTask();
+
+void taskManager::updateTaskItem(int taskID){
+    QVariantMap previousTask=queryTaskbyID(taskID);
+    editTask* taskWidget=new editTask(1,&previousTask);//TODO：需要传日期查process
+    connect(taskWidget,&editTask::taskConfirmed,this,[=](QVariantList taskContent){
+        QString name=taskContent[0].toString();
+        int category=taskContent[1].toInt();
+        QDateTime ddl=taskContent[2].toDateTime();
+        int repeatPeriod=taskContent[3].toInt();
+        QString description=taskContent[4].toString();
+        QString process=taskContent[5].toString();
+
+        int Completed=previousTask["isCompleted"].toInt();
+        updateTask(taskID,name,description,ddl,QDate(),&repeatPeriod,&category, &Completed);
+        //TODO:取代原框信息
+        //TODO:处理日期问题
+        /*
+        if(!process.isEmpty()){
+            insertProgress(taskID,,process);
+        }*/
+    });
     taskWidget->show();
 }
 
-//TODO:1.编辑任务板块的名字。2. 弹出任务窗口，显示已有的任务内容，并支持编辑任务和更新任务。
+//TODO:1.编辑任务板块的名字。

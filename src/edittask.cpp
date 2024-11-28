@@ -7,8 +7,8 @@
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 
-editTask::editTask(QWidget *parent)
-    : QWidget(parent)
+editTask::editTask(int s,QVariantMap* pretask,QWidget *parent)
+    : state(s),QWidget(parent)
     , ui(new Ui::editTask)
 {
     setWindowFlag(Qt::FramelessWindowHint);
@@ -26,7 +26,7 @@ editTask::editTask(QWidget *parent)
     ui->ddlText->setValidator(dateValidator);
     ui->ddlText->setPlaceholderText("yyyy-mm-dd");
 
-    QRegularExpression timeRegex("^\\([0-1][0-9]|2[0-3]):([0-5][0-9])$");
+    QRegularExpression timeRegex("^([0-1][0-9]|2[0-3]):([0-5][0-9])$");
     QRegularExpressionValidator *timeValidator =new QRegularExpressionValidator(timeRegex,this);
     ui->ddlTimeText->setValidator(timeValidator);
     ui->ddlTimeText->setPlaceholderText("00:00-23:59");
@@ -40,6 +40,26 @@ editTask::editTask(QWidget *parent)
     ui->descriptionEdit->setPlaceholderText("25 characters/letters only");
 
     ui->nameAlert->setVisible(false);
+
+    if(state==1){
+        ui->nameEdit->setText(pretask->value("name").toString());
+        ui->labelChoose->setCurrentIndex(pretask->value("category").toInt());
+        if(!pretask->value("deadline").isNull()){
+            qDebug() << "Deadline value: " << pretask->value("deadline").toString();
+            ui->Deadline->setCheckState(Qt::Checked);
+            QString dateTime=pretask->value("deadline").toString();
+            QStringList parts = dateTime.split(" ");
+            ui->ddlText->setText(parts[0]);
+            ui->ddlTimeText->setText(parts[1]);
+        }
+        if(pretask->value("repeatPeriod").toInt()!=0){
+            ui->repeat->setCheckState(Qt::Checked);
+            ui->repeatEdit->setText(pretask->value("repeatPeriod").toString());
+        }
+        if(!pretask->value("description").isNull()){
+            ui->descriptionEdit->setText(pretask->value("description").toString());
+        }
+    }
 }
 
 editTask::~editTask()
@@ -60,8 +80,8 @@ void editTask::on_okButton_clicked()
     taskContent.append(ui->labelChoose->currentIndex());
 
     if(ui->Deadline->isChecked()){
-        QString ddlDatetimeStr=ui->ddlText->text()+ui->ddlTimeText->text();
-        QDateTime ddlDatetime=QDateTime::fromString(ddlDatetimeStr);
+        QString ddlDatetimeStr=ui->ddlText->text()+" "+ui->ddlTimeText->text();
+        QDateTime ddlDatetime=QDateTime::fromString(ddlDatetimeStr,"yyyy-MM-dd HH:mm");
         taskContent.append(ddlDatetime);
     }
     else{

@@ -3,8 +3,6 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
-#include <QCheckBox>
-#include <QLabel>
 
 namespace Ui {
 class MainWindow;
@@ -16,7 +14,7 @@ class taskManager: public QWidget{
 public:
     explicit taskManager(QWidget* parent,Ui::MainWindow* parentUI);
     void refreshTask(QDate selectedDate);
-    void updateTaskItem(int taskID,QCheckBox* nameBox,QLabel* descriptionLabel);
+    void updateTaskItem(int taskId);
 
 public slots:
     void addTaskItem(int taskId,int category,QString taskName,int isCompleted,QString taskDescription=QString());

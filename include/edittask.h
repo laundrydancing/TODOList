@@ -13,11 +13,11 @@ class editTask : public QWidget
     Q_OBJECT
 
 public:
-    explicit editTask(QWidget *parent = nullptr);
+    explicit editTask(int s,QVariantMap* pretask=nullptr,QWidget *parent = nullptr);
     ~editTask();
 
 signals:
-    //返回的变量列表顺序：name category ddl repeatPeriod description process
+    //变量列表顺序：name category ddl repeatPeriod description process
     void taskConfirmed(QVariantList taskContent);
     void cancelEdit();
 
@@ -33,6 +33,7 @@ private slots:
     void on_ddlCalendar_clicked();
 
 private:
+    int state; //0=>new one; 1=>edit one
     Ui::editTask *ui;
 };
 

@@ -7,7 +7,7 @@
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 
-editTask::editTask(int s,QVariantMap* pretask,QWidget *parent)
+editTask::editTask(int s,QVariantMap* pretask,QString preProcess,QWidget *parent)
     : state(s),QWidget(parent)
     , ui(new Ui::editTask)
 {
@@ -36,16 +36,22 @@ editTask::editTask(int s,QVariantMap* pretask,QWidget *parent)
     ui->repeatEdit->setValidator(daysValidator);
     ui->repeatEdit->setPlaceholderText("1-30");
 
-    ui->descriptionEdit->setMaxLength(25);
-    ui->descriptionEdit->setPlaceholderText("25 characters/letters only");
+    ui->descriptionEdit->setMaxLength(20);
+    ui->descriptionEdit->setPlaceholderText("20 characters/letters only");
 
     ui->nameAlert->setVisible(false);
+    ui->deleteButton->setIcon(QIcon(":/img/Trash"));
+    ui->deleteButton->setIconSize(QSize(20, 20));
+
+    if(state==0){
+        ui->deleteButton->setVisible(false);
+        ui->deleteText->setVisible(false);
+    }
 
     if(state==1){
         ui->nameEdit->setText(pretask->value("name").toString());
         ui->labelChoose->setCurrentIndex(pretask->value("category").toInt());
         if(!pretask->value("deadline").isNull()){
-            qDebug() << "Deadline value: " << pretask->value("deadline").toString();
             ui->Deadline->setCheckState(Qt::Checked);
             QString dateTime=pretask->value("deadline").toString();
             QStringList parts = dateTime.split(" ");
@@ -58,6 +64,9 @@ editTask::editTask(int s,QVariantMap* pretask,QWidget *parent)
         }
         if(!pretask->value("description").isNull()){
             ui->descriptionEdit->setText(pretask->value("description").toString());
+        }
+        if(!preProcess.isNull()){
+            ui->processEdit->setText(preProcess);
         }
     }
 }
@@ -98,7 +107,6 @@ void editTask::on_okButton_clicked()
 
     taskContent.append(ui->descriptionEdit->text());
     taskContent.append(ui->processEdit->toPlainText());
-
 
     emit taskConfirmed(taskContent);
     this->close();
@@ -150,5 +158,51 @@ void editTask::on_ddlCalendar_clicked()
     calendarPos.rx()-=165;
     calendarPos.ry()-=180;
     calendarToChoose->newCalendarToSelect(calendarPos,300,QDate::currentDate());
+}
+
+
+void editTask::on_deleteButton_clicked()
+{
+    QDialog* recomfired=new QDialog();
+    recomfired->setObjectName("recomfired");
+    recomfired->setWindowFlag(Qt::FramelessWindowHint);
+    //recomfired->setAttribute(Qt::WA_TranslucentBackground);
+    recomfired->resize(400,300);
+    recomfired->installEventFilter(new DragWidgetFilter(recomfired));
+    QFile dialogStyle(":/style_src/dialog_style.css");
+    if(dialogStyle.open(QFile::ReadOnly)){
+        QString dialogStyleStr=dialogStyle.readAll();
+        recomfired->setStyleSheet(dialogStyleStr);
+    }
+
+    QVBoxLayout* mainlayout=new QVBoxLayout(recomfired);
+    QLabel* labeltext=new QLabel("Are you sure you want to delete this task?\nThis action cannot be undone.");
+    mainlayout->addWidget(labeltext);
+    labeltext->setMinimumHeight(100);
+
+    QHBoxLayout* buttonlayout=new QHBoxLayout();
+    QPushButton* yesButton=new QPushButton("Yes, delete it.");
+    yesButton->setMinimumHeight(40);
+    buttonlayout->addWidget(yesButton);
+    QPushButton* cancelButton=new QPushButton("No, keep it.");
+    cancelButton->setMinimumHeight(40);
+    buttonlayout->addWidget(cancelButton);
+
+    mainlayout->addLayout(buttonlayout);
+
+    mainlayout->setStretch(0, 4);
+    mainlayout->setStretch(1, 1);
+
+    connect(yesButton,&QPushButton::clicked,recomfired,[=]{
+        emit deleteComfired();
+        recomfired->accept();
+        this->close();
+    });
+
+    connect(cancelButton,&QPushButton::clicked,recomfired,[=]{
+        recomfired->reject();
+    });
+
+    recomfired->exec();
 }
 

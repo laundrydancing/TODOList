@@ -14,10 +14,10 @@ class taskManager: public QWidget{
 public:
     explicit taskManager(QWidget* parent,Ui::MainWindow* parentUI);
     void refreshTask(QDate selectedDate);
-    void updateTaskItem(int taskId);
+    void updateTaskItem(int taskId,QDate selectedDate);
 
 public slots:
-    void addTaskItem(int taskId,int category,QString taskName,int isCompleted,QString taskDescription=QString());
+    void addTaskItem(int taskId,QDate selectedDate,int category,QString taskName,int isCompleted,QString taskDescription=QString());
     void newEditTask(QDate newEditDate);
 
 private:

@@ -35,11 +35,12 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         include/taskManager.h
         include/edittask.h
         include/dateChoose.h
+        include/taskitem.h
 
         src/edittask.cpp
         src/taskManager.cpp
         src/dateManger.cpp
-
+        src/taskitem.cpp
     )
 
 target_include_directories(todolist PRIVATE

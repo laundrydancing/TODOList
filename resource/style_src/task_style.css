@@ -32,3 +32,12 @@ QLabel {
     font-size: 12px;
     color: gray;
 }
+
+QPushButton{
+    border:none;
+    background-color:rgba(0,0,0,0);
+}
+
+QPushButton:hover{
+    background-color:#f5f5f5;
+}

@@ -28,6 +28,8 @@ TaskItem::TaskItem(int taskId, QString taskName, int isCompleted, QString taskDe
 
     //任务名
     taskButton=new QCheckBox(this);
+    QString taskButtonName=QString::number(taskId)+"name";
+    taskButton->setObjectName(taskButtonName);
     taskButton->setText(taskName);
     taskButton->setFixedSize(taskItemWidth,30);
     taskItemLayout->addWidget(taskButton);
@@ -37,6 +39,8 @@ TaskItem::TaskItem(int taskId, QString taskName, int isCompleted, QString taskDe
     descriptionLabel=nullptr;
     if(!taskDescription.isEmpty()){
         descriptionLabel=new QLabel(taskDescription,this);
+        QString descriptionLabelName=QString::number(taskId)+"description";
+        descriptionLabel->setObjectName(descriptionLabelName);
         descriptionLabel->resize(taskItemWidth,20);
         descriptionLabel->setWordWrap(true);
         taskItemLayout->addWidget(descriptionLabel);
@@ -60,7 +64,6 @@ TaskItem::TaskItem(int taskId, QString taskName, int isCompleted, QString taskDe
     });
     connect(editButton,&QPushButton::clicked,this,[this]{
         emit editButtonClicked();
-        //TODO：加个限制，不能多开
     });
 }
 

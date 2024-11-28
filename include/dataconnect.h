@@ -103,7 +103,8 @@ bool insertProgress(const int &taskID,const QDate &editTime,const QString &conte
 }
 
 bool updateTask(const int &taskId,const QString &name=QString(), const QString &description=QString(),
-                const QDateTime &deadline = QDateTime(),const QDate &setTime = QDate(), const int* repeatPeriod=nullptr,
+                const QDateTime &deadline = QDateTime(),bool setDeadlineToNull = false,
+                const QDate &setTime = QDate(), const int* repeatPeriod=nullptr,
                 const int *category=nullptr, const int *isCompleted=nullptr){
     QSqlQuery query;
     QString updateTaskString=("update tasks set ");
@@ -112,6 +113,7 @@ bool updateTask(const int &taskId,const QString &name=QString(), const QString &
     if(!name.isEmpty())updates<<"name=:name";
     if(!description.isEmpty())updates<<"description=:description";
     if(deadline.isValid())updates<<"deadline=:deadline";
+    else if(setDeadlineToNull)updates<<"deadline=NULL";
     if(setTime.isValid())updates<<"setTime=:setTime";
     if(repeatPeriod!=nullptr)updates<<"repeatPeriod=:repeatPeriod";
     if(category!=nullptr)updates<<"category=:category";
@@ -141,22 +143,25 @@ bool updateTask(const int &taskId,const QString &name=QString(), const QString &
     return true;
 }
 
-bool updateProgress(const int &taskID,const QDate &editTime=QDate(),const QString &content=QString()){
+bool updateProcess(const int &taskID,const QDate &editTime,const QString &content=QString()){
     QSqlQuery query;
     QString updateProgressString=("update progress set ");
     QStringList updates;
 
-    if(editTime.isValid())updates<<"editTime=:editTime";
+    if(!editTime.isValid()){
+        qDebug()<<"there is a "<<editTime<<" when updating process\n";
+        return false;
+    }
     if(!content.isEmpty())updates<<"content=:content";
 
     if(updates.empty())return true;
     updateProgressString+=updates.join(", ");
-    updateProgressString+=" where taskId=:taskId";
+    updateProgressString+=" where taskId=:taskId and editTime=:editTime";
 
     query.prepare(updateProgressString);
 
     query.bindValue(":taskId",taskID);
-    if(editTime.isValid())query.bindValue(":editTime",editTime);
+    query.bindValue(":editTime",editTime);
     if(!content.isEmpty())query.bindValue(":content",content);
 
     if(!query.exec()){
@@ -172,6 +177,18 @@ bool deleteTask(const int& taskID){
     query.bindValue(":taskId",taskID);
     if(!query.exec()){
         qDebug() << "SQL Error occurs in deleting task:" << query.lastError().text();
+        return false;
+    }
+    return true;
+}
+
+bool deleteProcess(const int& taskID,const QDate &editTime){
+    QSqlQuery query;
+    query.prepare("delete from progress where taskId=:taskID and editTime=:editTime");
+    query.bindValue(":taskID",taskID);
+    query.bindValue(":editTime",editTime);
+    if(!query.exec()){
+        qDebug() << "SQL Error occurs in deleting process:" << query.lastError().text();
         return false;
     }
     return true;
@@ -197,7 +214,7 @@ QVariantList queryTaskbyDate(const QDate& selectedDate,const int& category){
     query.prepare("select * from tasks "
                   "where category=:category "
                   "and ("
-                  "(deadline IS NOT NULL AND deadline > :selectedDate || ' 23:59') "
+                  "(deadline IS NOT NULL AND deadline > DATE(:selectedDate, '-1 day') || ' 23:59') "
                   "or setTime = :selectedDate "
                   "or (repeatPeriod IS NOT NULL AND repeatPeriod != 0 AND (julianday(:selectedDate) - julianday(setTime)) % repeatPeriod = 0)"
                   ");"
@@ -225,7 +242,7 @@ QString queryProcess(const int &taskID,const QDate &editTime){
     query.bindValue(":taskID",taskID);
     query.bindValue(":editTime",editTime.toString("yyyy-MM-dd"));
 
-    QString contentStr;
+    QString contentStr=QString();
     if(query.exec()&&query.next()){
         contentStr=query.value(0).toString();
     }

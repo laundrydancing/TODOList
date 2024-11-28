@@ -28,25 +28,25 @@ taskManager::taskManager(QWidget* parent,Ui::MainWindow* parentUI):QWidget(paren
 }
 
 #define taskItemWidth 310
-void taskManager::addTaskItem(int taskId,int category,QString taskName,int isCompleted,QString taskDescription){
+void taskManager::addTaskItem(int taskId,QDate selectedDate,int category,QString taskName,int isCompleted,QString taskDescription){
     TaskItem* newTaskItem=new TaskItem(taskId,taskName,isCompleted,taskDescription,categoryWidgets[category]);
 
     //更新任务完成状态
     connect(newTaskItem,&TaskItem::taskStateChange,this,[=](Qt::CheckState state){
         if(state==Qt::Checked){
             int Completed=1;
-            updateTask(taskId,QString(),QString(),QDateTime(),QDate(),nullptr,nullptr, &Completed);
+            updateTask(taskId,QString(),QString(),QDateTime(),false,QDate(),nullptr,nullptr, &Completed);
             layout[category]->removeWidget(newTaskItem);
             layout[category]->addWidget(newTaskItem);
         }
         else if(state==Qt::Unchecked){
             int Completed=0;
-            updateTask(taskId,QString(),QString(),QDateTime(),QDate(),nullptr,nullptr, &Completed);
+            updateTask(taskId,QString(),QString(),QDateTime(),false,QDate(),nullptr,nullptr, &Completed);
         }
     });
 
     connect(newTaskItem,&TaskItem::editButtonClicked,this,[=]{
-        updateTaskItem(taskId);
+        updateTaskItem(taskId,selectedDate);
     });
 
     layout[category]->insertWidget(0,newTaskItem);
@@ -69,7 +69,7 @@ void taskManager::refreshTask(QDate selectedDate){
             int taskId=task["taskId"].toInt();
             QString taskName=task["name"].toString();
             QString taskDescription=task["description"].toString();
-            addTaskItem(taskId,i,taskName,isCompleted,taskDescription);
+            addTaskItem(taskId,selectedDate,i,taskName,isCompleted,taskDescription);
         }
         for (const QVariant& taskVariant : taskList) {
             QVariantMap task = taskVariant.toMap();
@@ -78,7 +78,7 @@ void taskManager::refreshTask(QDate selectedDate){
             int taskId=task["taskId"].toInt();
             QString taskName=task["name"].toString();
             QString taskDescription=task["description"].toString();
-            addTaskItem(taskId,i,taskName,isCompleted,taskDescription);
+            addTaskItem(taskId,selectedDate,i,taskName,isCompleted,taskDescription);
         }
     }
 }
@@ -98,7 +98,7 @@ void taskManager::newEditTask(QDate newEditDate){
             QString process=taskContent[5].toString();
 
             int taskID=insertTask(name,description,ddl,newEditDate, repeatPeriod, category,0);
-            addTaskItem(taskID,category,name,0,description);
+            addTaskItem(taskID,newEditDate,category,name,0,description);
 
             if(!process.isEmpty()){
                 insertProgress(taskID,newEditDate,process);
@@ -118,28 +118,94 @@ void taskManager::newEditTask(QDate newEditDate){
     }
 }
 
+void taskManager::updateTaskItem(int taskID,QDate selectedDate){
+    if(taskWidgetNum==0){
+        QVariantMap previousTask=queryTaskbyID(taskID);
+        QString preProcess=queryProcess(taskID,selectedDate);
+        editTask* taskWidget=new editTask(1,&previousTask,preProcess);
 
-void taskManager::updateTaskItem(int taskID){
-    QVariantMap previousTask=queryTaskbyID(taskID);
-    editTask* taskWidget=new editTask(1,&previousTask);//TODO：需要传日期查process
-    connect(taskWidget,&editTask::taskConfirmed,this,[=](QVariantList taskContent){
-        QString name=taskContent[0].toString();
-        int category=taskContent[1].toInt();
-        QDateTime ddl=taskContent[2].toDateTime();
-        int repeatPeriod=taskContent[3].toInt();
-        QString description=taskContent[4].toString();
-        QString process=taskContent[5].toString();
+        connect(taskWidget,&editTask::taskConfirmed,this,[=](QVariantList taskContent){
+            taskWidgetNum--;
+            QString name=taskContent[0].toString();
+            int category=taskContent[1].toInt();
+            QDateTime ddl=taskContent[2].toDateTime();
+            bool setDDLNull=false;
+            if(!ddl.isValid())setDDLNull=true;
+            int repeatPeriod=taskContent[3].toInt();
+            QString description=taskContent[4].toString();
+            QString process=taskContent[5].toString();
 
-        int Completed=previousTask["isCompleted"].toInt();
-        updateTask(taskID,name,description,ddl,QDate(),&repeatPeriod,&category, &Completed);
-        //TODO:取代原框信息
-        //TODO:处理日期问题
-        /*
-        if(!process.isEmpty()){
-            insertProgress(taskID,,process);
-        }*/
-    });
-    taskWidget->show();
+            int Completed=previousTask["isCompleted"].toInt();
+            updateTask(taskID,name,description,ddl,setDDLNull,QDate(),&repeatPeriod,&category, &Completed);
+
+            int preCategory=previousTask["category"].toInt();
+            if(preCategory!=category){
+                QString taskItemName=QString::number(taskID);
+                for (int i = 0; i < layout[preCategory]->count(); ++i){
+                    QLayoutItem* item =layout[preCategory]->itemAt(i);
+                    if (item) {
+                        QWidget* widget = item->widget();
+                        if(widget->objectName()==taskItemName){
+                            widget->deleteLater();
+                            break;
+                        }
+                    }
+                }
+                addTaskItem(taskID,selectedDate,category,name,Completed,description);
+            }
+            else{
+                QString taskItemName=QString::number(taskID);
+                for (int i = 0; i < layout[preCategory]->count(); ++i){
+                    QLayoutItem* item =layout[preCategory]->itemAt(i);
+                    if (item) {
+                        QWidget* widget = item->widget();
+                        if(widget->objectName()==taskItemName){
+                            QCheckBox* taskButton = widget->findChild<QCheckBox*>(taskItemName+"name");
+                            taskButton->setText(name);
+                            QLabel* descriptionLabel=widget->findChild<QLabel*>(taskItemName+"description");
+                            descriptionLabel->setText(description);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if(preProcess.isEmpty()){
+                insertProgress(taskID,selectedDate,process);
+            }
+            else if(process.isEmpty()){
+                deleteProcess(taskID,selectedDate);
+            }
+            else if(preProcess!=process){
+                updateProcess(taskID,selectedDate,process);
+            }
+        });
+
+        connect(taskWidget,&editTask::cancelEdit,this,[=]{
+            taskWidgetNum--;
+        });
+
+        connect(taskWidget,&editTask::deleteComfired,this,[=]{
+            taskWidgetNum--;
+            deleteTask(taskID);
+
+            QString taskItemName=QString::number(taskID);
+            int preCategory=previousTask["category"].toInt();
+            for (int i = 0; i < layout[preCategory]->count(); ++i){
+                QLayoutItem* item =layout[preCategory]->itemAt(i);
+                if (item) {
+                    QWidget* widget = item->widget();
+                    if(widget->objectName()==taskItemName){
+                        widget->deleteLater();
+                        break;
+                    }
+                }
+            }
+        });
+
+        taskWidgetNum++;
+        taskWidget->show();
+    }
 }
 
-//TODO:1.编辑任务板块的名字。
+//TODO:1.编辑任务板块的名字。2.一键删除某日全部任务。

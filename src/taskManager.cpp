@@ -41,10 +41,12 @@ void taskManager::addTaskItem(int taskId,QDate selectedDate,int category,QString
             updateTask(taskId,QString(),QString(),QDateTime(),false,QDate(),nullptr,nullptr, &Completed);
             layout[category]->removeWidget(newTaskItem);
             layout[category]->addWidget(newTaskItem);
+            timelinewidget->updateCompletation(taskId,1);
         }
         else if(state==Qt::Unchecked){
             int Completed=0;
             updateTask(taskId,QString(),QString(),QDateTime(),false,QDate(),nullptr,nullptr, &Completed);
+            timelinewidget->updateCompletation(taskId,0);
         }
     });
 
@@ -66,7 +68,7 @@ void taskManager::refreshTask(QDate selectedDate){
         QVariantList taskList=queryTaskbyDate(selectedDate,i);
 
         //两次循环，先加已经完成了的任务，再加没有完成的任务（因为每次插入都是在顶部）
-        //copy-and-parse（？？）了，或许可以重构
+        //copy-and-paste了，或许可以重构
         for (const QVariant& taskVariant : taskList) {
             QVariantMap task = taskVariant.toMap();
             int isCompleted=task["isCompleted"].toInt();
@@ -79,7 +81,7 @@ void taskManager::refreshTask(QDate selectedDate){
             QDateTime ddl=task["deadline"].toDateTime();
             if(ddl.isValid()){
                 if(ddl.date()==selectedDate){
-                    timelinewidget->addTimelineItem(ddl,taskName,taskId);
+                    timelinewidget->addTimelineItem(ddl,taskName,taskId,isCompleted);
                 }
             }
         }
@@ -95,7 +97,7 @@ void taskManager::refreshTask(QDate selectedDate){
             QDateTime ddl=task["deadline"].toDateTime();
             if(ddl.isValid()){
                 if(ddl.date()==selectedDate){
-                    timelinewidget->addTimelineItem(ddl,taskName,taskId);
+                    timelinewidget->addTimelineItem(ddl,taskName,taskId,isCompleted);
                 }
             }
         }
@@ -121,11 +123,11 @@ void taskManager::newEditTask(QDate newEditDate){
 
             if(ddl.isValid()){
                 if(ddl.date()==newEditDate)
-                timelinewidget->addTimelineItem(ddl,name,taskID);
+                timelinewidget->addTimelineItem(ddl,name,taskID,0);
             }
 
             if(!process.isEmpty()){
-                insertProgress(taskID,newEditDate,process);
+                insertProcess(taskID,newEditDate,process);
             }
 
             taskWidget->deleteLater();
@@ -150,17 +152,35 @@ void taskManager::updateTaskItem(int taskID,QDate selectedDate){
 
         connect(taskWidget,&editTask::taskConfirmed,this,[=](QVariantList taskContent){
             taskWidgetNum--;
+
+            int Completed=previousTask["isCompleted"].toInt();
             QString name=taskContent[0].toString();
             int category=taskContent[1].toInt();
+
+            //感觉这串条件判断好蠢，，可以简化吗？
             QDateTime ddl=taskContent[2].toDateTime();
             bool setDDLNull=false;
-            if(!ddl.isValid())setDDLNull=true;
-            //TODO: else updateTimelineItem();
+            if(!ddl.isValid()){
+                setDDLNull=true;
+                timelinewidget->deleteTimelineItem(taskID);
+            }
+            else if(previousTask["deadline"].toDateTime().date()==selectedDate && ddl.date()!=selectedDate){
+                timelinewidget->deleteTimelineItem(taskID);
+            }
+            else if(previousTask["deadline"].toDateTime().date()!=selectedDate && ddl.date()==selectedDate){
+                timelinewidget->addTimelineItem(ddl,name,taskID,Completed);
+            }
+            else if(ddl!=previousTask["deadline"].toDateTime()){
+                timelinewidget->updateTimeline(ddl,name,taskID);
+            }
+            else if(name!=previousTask["name"].toString()){
+                timelinewidget->updateTimeline(ddl,name,taskID);
+            }
+
             int repeatPeriod=taskContent[3].toInt();
             QString description=taskContent[4].toString();
             QString process=taskContent[5].toString();
 
-            int Completed=previousTask["isCompleted"].toInt();
             updateTask(taskID,name,description,ddl,setDDLNull,QDate(),&repeatPeriod,&category, &Completed);
 
             int preCategory=previousTask["category"].toInt();
@@ -196,7 +216,7 @@ void taskManager::updateTaskItem(int taskID,QDate selectedDate){
             }
 
             if(preProcess.isEmpty()){
-                insertProgress(taskID,selectedDate,process);
+                insertProcess(taskID,selectedDate,process);
             }
             else if(process.isEmpty()){
                 deleteProcess(taskID,selectedDate);

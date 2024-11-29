@@ -39,8 +39,8 @@ void createTable() {
         qDebug() << "Tasks Table created successfully!";
     }
 
-    QString createProgressTable = R"(
-        CREATE TABLE IF NOT EXISTS progress (
+    QString createProcessTable = R"(
+        CREATE TABLE IF NOT EXISTS process (
             taskId INTEGER,
             editTime TEXT,
             content TEXT,
@@ -48,7 +48,7 @@ void createTable() {
             FOREIGN KEY (taskId) REFERENCES tasks(taskId) ON DELETE CASCADE
         )
     )";
-    if (!query.exec(createProgressTable)) {
+    if (!query.exec(createProcessTable)) {
         qDebug() << "Error creating table:" << query.lastError();
     } else {
         qDebug() << "Tasks Table created successfully!";
@@ -87,10 +87,10 @@ int insertTask(const QString &name, const QString &description, const QDateTime 
     return query.lastInsertId().toInt();
 }
 
-bool insertProgress(const int &taskID,const QDate &editTime,const QString &content) {
+bool insertProcess(const int &taskID,const QDate &editTime,const QString &content) {
     QSqlQuery query;
     query.prepare(R"(
-        INSERT INTO progress(taskId,editTime,content)
+        INSERT INTO process(taskId,editTime,content)
         VALUES (:taskId,:editTime,:content)
     )");
     query.bindValue(":taskId",taskID);
@@ -145,7 +145,7 @@ bool updateTask(const int &taskId,const QString &name=QString(), const QString &
 
 bool updateProcess(const int &taskID,const QDate &editTime,const QString &content=QString()){
     QSqlQuery query;
-    QString updateProgressString=("update progress set ");
+    QString updateProcessString=("update process set ");
     QStringList updates;
 
     if(!editTime.isValid()){
@@ -155,17 +155,17 @@ bool updateProcess(const int &taskID,const QDate &editTime,const QString &conten
     if(!content.isEmpty())updates<<"content=:content";
 
     if(updates.empty())return true;
-    updateProgressString+=updates.join(", ");
-    updateProgressString+=" where taskId=:taskId and editTime=:editTime";
+    updateProcessString+=updates.join(", ");
+    updateProcessString+=" where taskId=:taskId and editTime=:editTime";
 
-    query.prepare(updateProgressString);
+    query.prepare(updateProcessString);
 
     query.bindValue(":taskId",taskID);
     query.bindValue(":editTime",editTime);
     if(!content.isEmpty())query.bindValue(":content",content);
 
     if(!query.exec()){
-        qDebug() << "SQL Error occurs in updating progress:" << query.lastError().text();
+        qDebug() << "SQL Error occurs in updating process:" << query.lastError().text();
         return false;
     }
     return true;
@@ -184,7 +184,7 @@ bool deleteTask(const int& taskID){
 
 bool deleteProcess(const int& taskID,const QDate &editTime){
     QSqlQuery query;
-    query.prepare("delete from progress where taskId=:taskID and editTime=:editTime");
+    query.prepare("delete from process where taskId=:taskID and editTime=:editTime");
     query.bindValue(":taskID",taskID);
     query.bindValue(":editTime",editTime);
     if(!query.exec()){
@@ -238,7 +238,7 @@ QVariantList queryTaskbyDate(const QDate& selectedDate,const int& category){
 
 QString queryProcess(const int &taskID,const QDate &editTime){
     QSqlQuery query;
-    query.prepare("select content from progress where taskId=:taskID and editTime=:editTime");
+    query.prepare("select content from process where taskId=:taskID and editTime=:editTime");
     query.bindValue(":taskID",taskID);
     query.bindValue(":editTime",editTime.toString("yyyy-MM-dd"));
 

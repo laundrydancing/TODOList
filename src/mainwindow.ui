@@ -351,6 +351,37 @@ QScrollArea{
 }</string>
      </property>
     </widget>
+    <widget class="QScrollArea" name="timelineArea">
+     <property name="geometry">
+      <rect>
+       <x>950</x>
+       <y>70</y>
+       <width>201</width>
+       <height>531</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QWidget{
+	background-color:#ffffff;
+}</string>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="uselesswidget">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>201</width>
+        <height>531</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
    </widget>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">

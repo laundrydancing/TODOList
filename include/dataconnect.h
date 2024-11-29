@@ -214,7 +214,7 @@ QVariantList queryTaskbyDate(const QDate& selectedDate,const int& category){
     query.prepare("select * from tasks "
                   "where category=:category "
                   "and ("
-                  "(deadline IS NOT NULL AND deadline > DATE(:selectedDate, '-1 day') || ' 23:59') "
+                  "(deadline IS NOT NULL AND deadline > DATE(:selectedDate, '-1 day') || ' 23:59' AND setTime <= :selectedDate) "
                   "or setTime = :selectedDate "
                   "or (repeatPeriod IS NOT NULL AND repeatPeriod != 0 AND (julianday(:selectedDate) - julianday(setTime)) % repeatPeriod = 0)"
                   ");"

@@ -24,6 +24,9 @@ taskManager::taskManager(QWidget* parent,Ui::MainWindow* parentUI):QWidget(paren
         layout[i]->setAlignment(Qt::AlignTop);
     }
 
+    timelinewidget=new TimelineWidget(parentUi->uselesswidget);
+    timelinewidget->setObjectName("timelinewidget");
+
     taskWidgetNum=0;
 }
 
@@ -53,6 +56,7 @@ void taskManager::addTaskItem(int taskId,QDate selectedDate,int category,QString
 }
 
 void taskManager::refreshTask(QDate selectedDate){
+    timelinewidget->refreshTimeline();
     for(int i=0;i<4;++i){
         while (QLayoutItem* item = layout[i]->takeAt(0)) {
             if (QWidget* widget = item->widget()) {
@@ -62,6 +66,7 @@ void taskManager::refreshTask(QDate selectedDate){
         QVariantList taskList=queryTaskbyDate(selectedDate,i);
 
         //两次循环，先加已经完成了的任务，再加没有完成的任务（因为每次插入都是在顶部）
+        //copy-and-parse（？？）了，或许可以重构
         for (const QVariant& taskVariant : taskList) {
             QVariantMap task = taskVariant.toMap();
             int isCompleted=task["isCompleted"].toInt();
@@ -70,6 +75,13 @@ void taskManager::refreshTask(QDate selectedDate){
             QString taskName=task["name"].toString();
             QString taskDescription=task["description"].toString();
             addTaskItem(taskId,selectedDate,i,taskName,isCompleted,taskDescription);
+
+            QDateTime ddl=task["deadline"].toDateTime();
+            if(ddl.isValid()){
+                if(ddl.date()==selectedDate){
+                    timelinewidget->addTimelineItem(ddl,taskName,taskId);
+                }
+            }
         }
         for (const QVariant& taskVariant : taskList) {
             QVariantMap task = taskVariant.toMap();
@@ -79,6 +91,13 @@ void taskManager::refreshTask(QDate selectedDate){
             QString taskName=task["name"].toString();
             QString taskDescription=task["description"].toString();
             addTaskItem(taskId,selectedDate,i,taskName,isCompleted,taskDescription);
+
+            QDateTime ddl=task["deadline"].toDateTime();
+            if(ddl.isValid()){
+                if(ddl.date()==selectedDate){
+                    timelinewidget->addTimelineItem(ddl,taskName,taskId);
+                }
+            }
         }
     }
 }
@@ -99,6 +118,11 @@ void taskManager::newEditTask(QDate newEditDate){
 
             int taskID=insertTask(name,description,ddl,newEditDate, repeatPeriod, category,0);
             addTaskItem(taskID,newEditDate,category,name,0,description);
+
+            if(ddl.isValid()){
+                if(ddl.date()==newEditDate)
+                timelinewidget->addTimelineItem(ddl,name,taskID);
+            }
 
             if(!process.isEmpty()){
                 insertProgress(taskID,newEditDate,process);
@@ -131,6 +155,7 @@ void taskManager::updateTaskItem(int taskID,QDate selectedDate){
             QDateTime ddl=taskContent[2].toDateTime();
             bool setDDLNull=false;
             if(!ddl.isValid())setDDLNull=true;
+            //TODO: else updateTimelineItem();
             int repeatPeriod=taskContent[3].toInt();
             QString description=taskContent[4].toString();
             QString process=taskContent[5].toString();
@@ -201,6 +226,8 @@ void taskManager::updateTaskItem(int taskID,QDate selectedDate){
                     }
                 }
             }
+
+            timelinewidget->deleteTimelineItem(taskID);
         });
 
         taskWidgetNum++;

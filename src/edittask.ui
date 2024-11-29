@@ -382,6 +382,41 @@ QPushButton#ddlCalendar:hover{
      </rect>
     </property>
    </widget>
+   <widget class="QPushButton" name="deleteButton">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
+      <y>480</y>
+      <width>41</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton#deleteButton{
+	background-color:rgba(0,0,0,0);
+}
+
+QPushButton#deleteButton:hover{
+	background-color:rgba(203,203,203,0.5);
+}</string>
+    </property>
+    <property name="text">
+     <string>                                </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="deleteText">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>480</y>
+      <width>191</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Delete this Task</string>
+    </property>
+   </widget>
    <zorder>taskIcon</zorder>
    <zorder>taskTitle</zorder>
    <zorder>taskName</zorder>
@@ -402,6 +437,8 @@ QPushButton#ddlCalendar:hover{
    <zorder>label</zorder>
    <zorder>nameAlert</zorder>
    <zorder>descriptionEdit</zorder>
+   <zorder>deleteButton</zorder>
+   <zorder>deleteText</zorder>
   </widget>
  </widget>
  <resources>

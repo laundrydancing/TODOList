@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
+#include "timeline.h"
 
 namespace Ui {
 class MainWindow;
@@ -25,6 +26,7 @@ private:
     QWidget* categoryWidgets[4];
     QVBoxLayout *layout[4];
     int taskWidgetNum;
+    TimelineWidget* timelinewidget;
 };
 
 #endif // TASKMANAGER_H

@@ -27,6 +27,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         src/edittask.ui
         resource/icons.qrc
         resource/style.qrc
+        resource/finalIcon.rc
 
         include/dateManager.h
         include/timeline.h
@@ -40,7 +41,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         src/edittask.cpp
         src/taskManager.cpp
         src/dateManger.cpp
-        src/taskitem.cpp
+        src/taskitem.cpp        
     )
 
 target_include_directories(todolist PRIVATE
@@ -76,12 +77,18 @@ if(${QT_VERSION} VERSION_LESS 6.1.0)
   set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.todolist)
 endif()
 set_target_properties(todolist PROPERTIES
+    OUTPUT_NAME "EZList"
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
+
+if(WIN32)
+    set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/resource/finalIcon.rc")
+    target_sources(todolist PRIVATE ${APP_ICON_RESOURCE_WINDOWS})
+endif()
 
 include(GNUInstallDirs)
 install(TARGETS todolist
@@ -93,3 +100,5 @@ install(TARGETS todolist
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(todolist)
 endif()
+
+

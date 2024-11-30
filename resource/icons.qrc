@@ -17,5 +17,9 @@
         <file>img/User.svg</file>
         <file>img/X.svg</file>
         <file>img/point.svg</file>
+        <file>img/icon/icon2.ico</file>
+        <file>img/icon/icon3.ico</file>
+        <file>img/icon/icon4.ico</file>
+        <file>img/icon/icon5.ico</file>
     </qresource>
 </RCC>

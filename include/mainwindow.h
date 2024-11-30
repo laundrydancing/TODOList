@@ -23,6 +23,7 @@ public:
 
     QDate updateDate();
 
+    void loadCategoryText();
 
 private slots:
     void on_exit_Button_clicked();
@@ -30,6 +31,9 @@ private slots:
     void on_minus_Button_clicked();
 
     void onDateExchange();
+
+    void updateCategoryText(int label,QPoint pos,QLabel* label_task);
+
 
 private:
     Ui::MainWindow *ui;

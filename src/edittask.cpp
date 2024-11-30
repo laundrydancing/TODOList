@@ -4,6 +4,7 @@
 #include "dateChoose.h"
 
 #include <QDateTime>
+#include <QSettings>
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 
@@ -16,7 +17,16 @@ editTask::editTask(int s,QVariantMap* pretask,QString preProcess,QWidget *parent
     this->installEventFilter(new DragWidgetFilter(this));
 
     ui->setupUi(this);
-    ui->labelChoose->addItems({"Task1","Task2","Task3","Task4"});//TODO：用户自定义标签名字
+
+    QFile file("./settings.ini");
+    QSettings settings("./settings.ini", QSettings::IniFormat);
+    QString labelname[4];
+    labelname[0]=settings.value("label1").toString();
+    labelname[1]=settings.value("label2").toString();
+    labelname[2]=settings.value("label3").toString();
+    labelname[3]=settings.value("label4").toString();
+    file.close();
+    ui->labelChoose->addItems({labelname[0],labelname[1],labelname[2],labelname[3]});
 
     ui->Deadline->setLayoutDirection(Qt::RightToLeft);
     ui->repeat->setLayoutDirection(Qt::RightToLeft);
@@ -40,8 +50,6 @@ editTask::editTask(int s,QVariantMap* pretask,QString preProcess,QWidget *parent
     ui->descriptionEdit->setPlaceholderText("20 characters/letters only");
 
     ui->nameAlert->setVisible(false);
-    ui->deleteButton->setIcon(QIcon(":/img/Trash"));
-    ui->deleteButton->setIconSize(QSize(20, 20));
 
     if(state==0){
         ui->deleteButton->setVisible(false);
@@ -71,13 +79,11 @@ editTask::editTask(int s,QVariantMap* pretask,QString preProcess,QWidget *parent
     }
 }
 
-editTask::~editTask()
-{
+editTask::~editTask(){
     delete ui;
 }
 
-void editTask::on_okButton_clicked()
-{
+void editTask::on_okButton_clicked(){
     QString nameStr=ui->nameEdit->toPlainText();
     if(nameStr.isEmpty()){
         ui->nameAlert->setVisible(true);
@@ -92,16 +98,14 @@ void editTask::on_okButton_clicked()
         QString ddlDatetimeStr=ui->ddlText->text()+" "+ui->ddlTimeText->text();
         QDateTime ddlDatetime=QDateTime::fromString(ddlDatetimeStr,"yyyy-MM-dd HH:mm");
         taskContent.append(ddlDatetime);
-    }
-    else{
+    }else{
         taskContent.append(QDateTime());
     }
 
     if(ui->repeat->isChecked()){
         int repeatPeriod=ui->repeatEdit->text().toInt();
         taskContent.append(repeatPeriod);
-    }
-    else{
+    }else{
         taskContent.append(0);
     }
 
@@ -112,15 +116,13 @@ void editTask::on_okButton_clicked()
     this->close();
 }
 
-void editTask::on_cancelButton_clicked()
-{
+void editTask::on_cancelButton_clicked(){
     emit cancelEdit();
     this->close();
 }
 
 
-void editTask::on_Deadline_checkStateChanged(const Qt::CheckState &arg1)
-{
+void editTask::on_Deadline_checkStateChanged(const Qt::CheckState &arg1){
     bool enableState=false;
     if(arg1==Qt::Checked){
         enableState=true;
@@ -131,19 +133,16 @@ void editTask::on_Deadline_checkStateChanged(const Qt::CheckState &arg1)
 }
 
 
-void editTask::on_repeat_checkStateChanged(const Qt::CheckState &arg1)
-{
+void editTask::on_repeat_checkStateChanged(const Qt::CheckState &arg1){
     if(arg1==Qt::Checked){
         ui->repeatEdit->setEnabled(true);
-    }
-    else{
+    }else{
         ui->repeatEdit->setEnabled(false);
     }
 }
 
 
-void editTask::on_ddlCalendar_clicked()
-{
+void editTask::on_ddlCalendar_clicked(){
     dateChoose* calendarToChoose=new dateChoose(this);
 
     connect(calendarToChoose,&dateChoose::dateConfirmed,this,[=](QDate s_Date) {
@@ -161,14 +160,14 @@ void editTask::on_ddlCalendar_clicked()
 }
 
 
-void editTask::on_deleteButton_clicked()
-{
+void editTask::on_deleteButton_clicked(){
     QDialog* recomfired=new QDialog();
     recomfired->setObjectName("recomfired");
-    recomfired->setWindowFlag(Qt::FramelessWindowHint);
+    //recomfired->setWindowFlag(Qt::FramelessWindowHint);
     //recomfired->setAttribute(Qt::WA_TranslucentBackground);
+    //recomfired->installEventFilter(new DragWidgetFilter(recomfired));
+    recomfired->setWindowTitle("Warning");
     recomfired->resize(400,300);
-    recomfired->installEventFilter(new DragWidgetFilter(recomfired));
     QFile dialogStyle(":/style_src/dialog_style.css");
     if(dialogStyle.open(QFile::ReadOnly)){
         QString dialogStyleStr=dialogStyle.readAll();

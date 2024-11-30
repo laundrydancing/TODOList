@@ -255,4 +255,4 @@ void taskManager::updateTaskItem(int taskID,QDate selectedDate){
     }
 }
 
-//TODO:1.编辑任务板块的名字。2.一键删除某日全部任务。
+//TODO:1.一键删除某日全部任务。

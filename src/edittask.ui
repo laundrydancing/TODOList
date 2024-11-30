@@ -401,7 +401,10 @@ QPushButton#deleteButton:hover{
 }</string>
     </property>
     <property name="text">
-     <string>                                </string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset theme="QIcon::ThemeIcon::EditDelete"/>
     </property>
    </widget>
    <widget class="QLabel" name="deleteText">

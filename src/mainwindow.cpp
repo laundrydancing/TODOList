@@ -1,8 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 #include "dragwidget.h"
+
 #include <QGraphicsDropShadowEffect>
+#include <QFile>
+#include <QSettings>
+#include <QTextEdit>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -14,6 +17,21 @@ MainWindow::MainWindow(QWidget *parent)
     setAttribute(Qt::WA_TranslucentBackground);
 
     this->installEventFilter(new DragWidgetFilter(this));
+
+    //初始化标签
+    loadCategoryText();
+    connect(ui->task1_edit,&QPushButton::clicked,this,[=]{
+        updateCategoryText(0,QPoint(100,100),ui->task1_label);
+    });
+    connect(ui->task2_edit,&QPushButton::clicked,this,[=]{
+        updateCategoryText(1,QPoint(510,100),ui->task2_label);
+    });
+    connect(ui->task3_edit,&QPushButton::clicked,this,[=]{
+        updateCategoryText(2,QPoint(100,400),ui->task3_label);
+    });
+    connect(ui->task4_edit,&QPushButton::clicked,this,[=]{
+        updateCategoryText(3,QPoint(510,400),ui->task4_label);
+    });
 
     //给listView加阴影
     setShadowEffect(ui->task1);
@@ -31,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
         calendarPos.rx()-=55;
         calendarPos.ry()+=35;
         datemanager->newCalendar(calendarPos);
-    }); //再点击一次calendar关掉日历，如何实现
+    }); //TODO: 再点击一次calendar关掉日历
     connect(datemanager,&DateManager::dateSent,this,&MainWindow::onDateExchange);
 
     //任务管理
@@ -82,5 +100,75 @@ void MainWindow::onDateExchange(){
         );
 
     taskmanager->refreshTask(newDate);
-    //TODO: timeline的更新
+}
+
+void MainWindow::loadCategoryText(){
+    QFile file("./settings.ini");
+
+    if (!file.exists()) {
+        QSettings settings("./settings.ini", QSettings::IniFormat);
+        settings.setValue("label1", ui->task1_label->text());
+        settings.setValue("label2", ui->task2_label->text());
+        settings.setValue("label3", ui->task3_label->text());
+        settings.setValue("label4", ui->task4_label->text());
+    } else {
+        QSettings settings("./settings.ini", QSettings::IniFormat);
+        ui->task1_label->setText(settings.value("label1").toString());
+        ui->task2_label->setText(settings.value("label2").toString());
+        ui->task3_label->setText(settings.value("label3").toString());
+        ui->task4_label->setText(settings.value("label4").toString());
+    }
+    file.close();
+}
+
+void MainWindow::updateCategoryText(int label,QPoint pos,QLabel* tasklabel){
+    tasklabel->setVisible(false);
+    QWidget* categoryEditWidget=new QWidget(this);
+    categoryEditWidget->setFixedSize(300,50);
+    categoryEditWidget->move(pos);
+    QHBoxLayout* categoryEditLayout=new QHBoxLayout(categoryEditWidget);
+    categoryEditLayout->setContentsMargins(5, 5, 5, 5);
+    categoryEditLayout->setSpacing(2);
+
+    QTextEdit* categoryedit=new QTextEdit();
+    categoryedit->setFixedSize(250,38);
+    categoryedit->setText(tasklabel->text());
+    categoryedit->setStyleSheet("border:1px solid #a1a1a1;"
+                                "border-radius:10px;"
+                                "padding: 4px 0px;"
+                                "font:11pt \"微软雅黑\";");
+    categoryEditLayout->addWidget(categoryedit);
+
+    QPushButton* comfiredButton=new QPushButton("");
+    comfiredButton->setFixedSize(QSize(30,30));
+    comfiredButton->setIcon(QIcon(":/img/Check.svg"));
+    comfiredButton->setIconSize(QSize(20, 20));
+    comfiredButton->setStyleSheet("QPushButton{"
+                                  "border:none;"
+                                  "}"
+                                  "QPushButton:hover{"
+                                  "background-color:#bebebe;"
+                                  "}");
+    categoryEditLayout->addWidget(comfiredButton);
+
+    categoryEditWidget->setLayout(categoryEditLayout);
+
+    connect(comfiredButton,&QPushButton::clicked,this,[=]{
+        QString newname=categoryedit->toPlainText();
+        QFile file("./settings.ini");
+        QSettings settings("./settings.ini", QSettings::IniFormat);
+        switch(label){
+        case 0:settings.setValue("label1", newname);break;
+        case 1:settings.setValue("label2", newname);break;
+        case 2:settings.setValue("label3", newname);break;
+        case 3:settings.setValue("label4", newname);break;
+        }
+        file.close();
+
+        categoryEditWidget->deleteLater();
+        tasklabel->setText(newname);
+        tasklabel->setVisible(true);
+    });
+
+    categoryEditWidget->show();
 }

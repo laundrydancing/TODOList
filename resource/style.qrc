@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>style_src/calendar_style.css</file>
+        <file>style_src/task_style.css</file>
+        <file>style_src/dialog_style.css</file>
+    </qresource>
+</RCC>

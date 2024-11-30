@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file>img/Calendar.svg</file>
+        <file>img/Check.svg</file>
+        <file>img/Check_white.svg</file>
+        <file>img/Chevron-down.svg</file>
+        <file>img/Chevron-up.svg</file>
+        <file>img/Clipboard.svg</file>
+        <file>img/clock.svg</file>
+        <file>img/Edit.svg</file>
+        <file>img/Icon button.svg</file>
+        <file>img/Menu.svg</file>
+        <file>img/Minus.svg</file>
+        <file>img/Plus.svg</file>
+        <file>img/Switch.svg</file>
+        <file>img/Trash.svg</file>
+        <file>img/User.svg</file>
+        <file>img/X.svg</file>
+        <file>img/point.svg</file>
+    </qresource>
+</RCC>
